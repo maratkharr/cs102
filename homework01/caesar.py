@@ -1,20 +1,54 @@
-D1 = dict(zip("ABCDEFGHIJKLMNOPQRSTUVWXYZ",range(26)))
-D2 = dict(zip(range(26),"ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+def encrypt_caesar(plaintext):
+    """
+    Encrypts plaintext using a Caesar cipher.
 
-plaintext = input()
+    >>> encrypt_caesar("PYTHON")
+    'SBWKRQ'
+    >>> encrypt_caesar("python")
+    'sbwkrq'
+    >>> encrypt_caesar("")
+    ''
+    """
+    ciphertext = ""
+    for i in plaintext:
+        if 64 < ord(i) < 64 + 26:
+            if ord(i) > 64 + 26 - shift:
+                ciphertext += chr(ord(i) + shift - 26)
+            else:
+                ciphertext += chr(ord(i) + shift)
+        elif 96 < ord(i) < 96 + 26:
+            if ord(i) > 96 + 26 - shift:
+                ciphertext += chr(ord(i) + shift - 26)
+            else:
+                ciphertext += chr(ord(i) + shift)
+        else:
+            ciphertext += i
+    return ciphertext
 
-# encrypt
-ciphertext = ""
-for c in plaintext.upper():
-    if c.isalpha(): ciphertext += D2[ (D1[c] + 3) % 26]
-    else: ciphertext += c
 
-# decrypt
-plaintext2 = ""
-for c in ciphertext.upper():
-    if c.isalpha(): plaintext2 += D2[ (D1[c] - 3) % 26]
-    else: plaintext2 += c
+def decrypt_caesar(ciphertext):
+    """
+    Decrypts a ciphertext using a Caesar cipher.
 
-print(plaintext)
-print(ciphertext)
-print(plaintext2)
+    >>> decrypt_caesar("SBWKRQ")
+    'PYTHON'
+    >>> decrypt_caesar("sbwkrq")
+    'python'
+    >>> decrypt_caesar("")
+    ''
+    """
+    plaintext = ""
+    for i in ciphertext:
+        if 64 < ord(i) < 64 + 26:
+            if ord(i) < 64 + shift:
+                plaintext += chr(ord(i) - shift + 26)
+            else:
+                plaintext += chr(ord(i) - shift)
+        elif 96 < ord(i) < 96 + 26:
+            if ord(i) < 96 + shift:
+                plaintext += chr(ord(i) - shift + 26)
+            else:
+                plaintext += chr(ord(i) - shift)
+        else:
+            ciphertext += i
+    return plaintext
