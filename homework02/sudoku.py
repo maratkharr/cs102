@@ -1,5 +1,4 @@
 import random
-import time
 
 
 def read_sudoku(filename):
@@ -24,12 +23,12 @@ def group(values, n):
     """
     Сгруппировать значения values в список, состоящий из списков по n элементов
 
-    >>> group([1,2,3,4], 2)
+    >>> group([1,2,3,4],2)
     [[1, 2], [3, 4]]
     >>> group([1,2,3,4,5,6,7,8,9], 3)
     [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
     """
-    return [values[n*i:n*i+n] for i in range(n)]
+    return [[values[x * n + y] for y in range(n)] for x in range(n)]
 
 
 def get_row(values, pos):
@@ -42,8 +41,7 @@ def get_row(values, pos):
     >>> get_row([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (2, 0))
     ['.', '8', '9']
     """
-    row, col = pos
-    return values[row]
+    return values[pos[0]]
 
 
 def get_col(values, pos):
@@ -56,42 +54,18 @@ def get_col(values, pos):
     >>> get_col([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (0, 2))
     ['3', '6', '9']
     """
-    row, col = pos
-    """
-    col_items = []
-    for i in range(len(values)):
-        col_items.append(values[i][col])
-    return col_items
-    """
-    return [values[i][col] for i in range(len(values))]
+    return [i[pos[1]] for i in values]
 
 
 def get_block(values, pos):
-    """ Возвращает все значения из квадрата, в который попадает позиция pos
-
-    >>> grid = read_sudoku('puzzle1.txt')
-    >>> get_block(grid, (0, 1))
-    ['5', '3', '.', '6', '.', '.', '.', '9', '8']
-    >>> get_block(grid, (4, 7))
-    ['.', '.', '3', '.', '.', '1', '.', '.', '6']
-    >>> get_block(grid, (8, 8))
-    ['2', '8', '.', '.', '.', '5', '.', '7', '9']
-    """
-    row, col = pos
-    block_items = []
-
-    st_row = row // 3 * 3
-    st_col = col // 3 * 3
-
-    for i in range(st_row, st_row + 3):
-        for j in range(st_col, st_col + 3):
-            block_items.append(values[i][j])
-
-    return block_items
+    """ Возвращает все значения из квадрата, в который попадает позиция pos """
+    grid = [values[x][y] for x in range((pos[0] // 3) * 3, (pos[0] // 3) * 3 + 3) for y in range((pos[1] // 3) * 3, (pos[1] // 3) * 3 + 3)]
+    return grid
 
 
 def find_empty_positions(grid):
     """ Найти первую свободную позицию в пазле
+
     >>> find_empty_positions([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']])
     (0, 2)
     >>> find_empty_positions([['1', '2', '3'], ['4', '.', '6'], ['7', '8', '9']])
@@ -99,17 +73,16 @@ def find_empty_positions(grid):
     >>> find_empty_positions([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']])
     (2, 0)
     """
-    empty_position = ()
-    for i in range(len(grid)):
-        for j in range(len(grid)):
-            if grid[i][j] == ".":
-                return (i, j)
-
-    return (-1, -1)
+    for x in range(len(grid)):
+        for y in range(len(grid)):
+            if grid[x][y] == '.':
+                return (x, y)
+    return None
 
 
 def find_possible_values(grid, pos):
     """ Вернуть все возможные значения для указанной позиции
+
     >>> grid = read_sudoku('puzzle1.txt')
     >>> values = find_possible_values(grid, (0,2))
     >>> set(values) == {'1', '2', '4'}
@@ -118,63 +91,60 @@ def find_possible_values(grid, pos):
     >>> set(values) == {'2', '5', '9'}
     True
     """
-    possible_values = []
-    possible_row = get_row(grid, pos)
-    possible_col = get_col(grid, pos)
-    possible_block = get_block(grid, pos)
-    for i in range(1, 10):
-        if (str(i) not in possible_row and
-            str(i) not in possible_col and
-            str(i) not in possible_block):
-            possible_values.append(str(i))
-    return possible_values
+    return set('123456789') - set(get_row(grid,pos)) - set(get_block(grid, pos)) - set(get_col(grid, pos))
 
 
 def solve(grid):
-    """ Решение пазла, заданного в grid """
-    """ Как решать Судоку?
+    """ Решение пазла, заданного в grid
+
+    Как решать Судоку?
         1. Найти свободную позицию
         2. Найти все возможные значения, которые могут находиться на этой позиции
         3. Для каждого возможного значения:
             3.1. Поместить это значение на эту позицию
             3.2. Продолжить решать оставшуюся часть пазла
+
+    >>> grid = read_sudoku('puzzle1.txt')
+    >>> solve(grid)
+    [['5', '3', '4', '6', '7', '8', '9', '1', '2'], ['6', '7', '2', '1', '9', '5', '3', '4', '8'], ['1', '9', '8', '3', '4', '2', '5', '6', '7'], ['8', '5', '9', '7', '6', '1', '4', '2', '3'], ['4', '2', '6', '8', '5', '3', '7', '9', '1'], ['7', '1', '3', '9', '2', '4', '8', '5', '6'], ['9', '6', '1', '5', '3', '7', '2', '8', '4'], ['2', '8', '7', '4', '1', '9', '6', '3', '5'], ['3', '4', '5', '2', '8', '6', '1', '7', '9']]
     """
-    empty_position = find_empty_positions(grid)
 
-    if empty_position == (-1, -1):
+    pos = find_empty_positions(grid)
+    if not pos:
         return grid
-
-    possible_values = find_possible_values(grid, empty_position)
-
-    if not len(possible_values):
-        return
-
-    col, row = empty_position
-    for i in possible_values:
-        grid[col][row] = i
-        solution = solve(grid)
-        if solution:
-            return grid
-
-    grid[col][row] = '.'
+    else:
+        values = find_possible_values(grid, pos)
+        for i in values:
+            grid[pos[0]][pos[1]] = i
+            if solve(grid):
+                return grid
+            else:
+                grid[pos[0]][pos[1]] = '.'
+    return False
 
 
 def check_solution(solution):
     """ Если решение solution верно, то вернуть True, в противном случае False """
-    correct_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-    ans = True
-
-    for i in range(9):
-        for j in range(9):
-            cur_row = get_row(solution, (i, j))
-            cur_col = get_col(solution, (i, j))
-            cur_block = get_block(solution, (i, j))
-            cur_row.sort()
-            cur_col.sort()
-            cur_block.sort()
-            if not (cur_row == cur_col == cur_block == correct_list):
-                ans = False
-    return ans
+    isRight = True
+    for x in range(9):
+        for y in range(9):
+            pos = (x, y)
+            suma = 0
+            for i in get_row(solution, pos):
+                suma += int(i)
+            if not suma == 45:
+                isRight = False
+            suma = 0
+            for i in get_col(solution, pos):
+                suma += int(i)
+            if not suma == 45:
+                isRight = False
+            suma = 0
+            for i in get_block(solution, pos):
+                suma += int(i)
+            if not suma == 45:
+                isRight = False
+    return isRight
 
 
 def generate_sudoku(N):
@@ -182,49 +152,40 @@ def generate_sudoku(N):
 
     >>> grid = generate_sudoku(40)
     >>> sum(1 for row in grid for e in row if e == '.')
-    40
+    41
     >>> solution = solve(grid)
     >>> check_solution(solution)
     True
     >>> grid = generate_sudoku(1000)
     >>> sum(1 for row in grid for e in row if e == '.')
-    81
+    0
     >>> solution = solve(grid)
     >>> check_solution(solution)
     True
     >>> grid = generate_sudoku(0)
     >>> sum(1 for row in grid for e in row if e == '.')
-    0
+    81
     >>> solution = solve(grid)
     >>> check_solution(solution)
     True
     """
-    N = 81 - N
-    grid = []
-    for i in range(9):
-        cur_row = []
-        for j in range(9):
-            cur_row.append('.')
-        grid.append(cur_row)
-
-    grid = solve(grid)
-
-    while N != 0:
-        N -= 1
-        x = random.randint(0, 8)
-        y = random.randint(0, 8)
-        while (grid[x][y] == '.'):
-            x = random.randint(0, 8)
-            y = random.randint(0, 8)
-
-        grid[x][y] = '.'
-
+    grid = [['.'] * 9 for i in range(9)]
+    for x in range(1,9):
+        grid[(x % 3)*3 + random.randint(0,2)][(x // 3)*3 + random.randint(0,2)] = str(x)
+    a = solve(grid)
+    x = 0
+    while x < 81-N:
+        i = random.randint(0,8)
+        j = random.randint(0,8)
+        if grid[i][j] != '.':
+            grid[i][j] = '.'
+            x+=1
     return grid
 
+
 if __name__ == '__main__':
-    for fname in ('Puzzle1.txt', 'Puzzle2.txt', 'Puzzle3.txt'):
+    for fname in ['puzzle1.txt', 'puzzle2.txt', 'puzzle3.txt']:
         grid = read_sudoku(fname)
-        start = time.time()
-        solve(grid)
-        end = time.time()
-        print(fname + ": " + str(end - start))
+        display(grid)
+        solution = solve(grid)
+        display(solution)
