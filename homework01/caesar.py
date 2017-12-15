@@ -30,7 +30,6 @@ def decrypt_caesar(ciphertext):
     """
     Decrypts a ciphertext using a Caesar cipher.
 
-
     >>> decrypt_caesar("SBWKRQ")
     'PYTHON'
     >>> decrypt_caesar("sbwkrq")
